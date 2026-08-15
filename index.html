@@ -1,9 +1,215 @@
-<html>
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suivi</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐳​</text></svg>">
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#687386;--line:#e5e9f0;--primary:#4967ff;--danger:#d9485f;--shadow:0 8px 30px #18203312}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}.app{display:flex;min-height:100vh}
+nav{width:235px;background:#10182b;color:#fff;padding:22px 14px;position:fixed;inset:0 auto 0 0}
+.logo{font-size:20px;font-weight:800;padding:0 12px 24px}.navbtn{width:100%;padding:12px 14px;margin:3px 0;background:transparent;color:#cbd3e6;text-align:left;border-radius:10px}.navbtn.active,.navbtn:hover{background:#202b47;color:#fff}
+main{margin-left:235px;width:calc(100% - 235px);padding:28px;max-width:1400px}.view{display:none}.view.active{display:block}
+h1{margin:0 0 7px;font-size:28px}h2{font-size:19px;margin:0 0 16px}.sub{color:var(--muted);margin:0 0 24px}.grid{display:grid;gap:18px}.cards{grid-template-columns:repeat(4,minmax(0,1fr))}.two{grid-template-columns:1.35fr .65fr}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}.settings-card{padding:28px}.settings-card form{gap:20px}.settings-card .row{gap:20px}.settings-card label{gap:9px}.settings-card .actions{gap:12px;margin-top:8px}
+.metric{font-size:29px;font-weight:800;margin-top:6px}.label{color:var(--muted);font-size:13px}.positive{color:#198754}.negative{color:var(--danger)}
+form{display:grid;gap:12px}.row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}label{font-weight:650;font-size:13px;display:grid;gap:6px}input,select,textarea{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--text)}textarea{min-height:70px;resize:vertical}.btn{padding:10px 14px;border-radius:9px;background:var(--primary);color:#fff;font-weight:700}.btn.secondary{background:#edf0f7;color:#27334c}.btn.danger{background:#fff0f2;color:var(--danger)}.actions{display:flex;gap:8px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:11px 8px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--muted);text-transform:uppercase}
+.empty{color:var(--muted);padding:18px 0}.chart{height:320px;position:relative}.small{font-size:12px;color:var(--muted)}
+.progress{height:10px;background:#edf0f5;border-radius:10px;overflow:hidden;margin-top:10px}.progress>i{display:block;height:100%;background:var(--primary);border-radius:10px}
+.calendar{overflow:auto}.week{min-width:760px;display:grid;grid-template-columns:80px repeat(7,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden}.week>div{border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:62px;padding:6px}.head{background:#f8f9fc;font-weight:700;text-align:center;min-height:42px!important}.time{font-size:11px;color:var(--muted);background:#fafbfe}.event{background:#e9edff;border-left:4px solid var(--primary);border-radius:7px;padding:7px;font-size:12px;margin:2px 0;cursor:pointer}.event strong{display:block}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px}.mobileNav{display:none}
+@media(max-width:900px){nav{display:none}.mobileNav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#10182b;padding:7px;z-index:5;gap:3px}.mobileNav .navbtn{font-size:11px;text-align:center;padding:9px 3px}main{margin:0;width:100%;padding:18px 14px 78px}.cards{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.row,.row3{grid-template-columns:1fr}.toolbar{align-items:flex-start;flex-direction:column}}
 
+
+.planner-help{padding:11px 13px;background:#f7f8fc;border:1px solid var(--line);border-radius:10px;color:var(--muted);margin-bottom:16px;font-size:13px}
+.simple-week{min-width:760px;display:grid;grid-template-columns:100px repeat(7,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.simple-week>div{border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-height:105px;padding:8px}
+.simple-week .head{min-height:48px;background:var(--plannerHead,#f8f9fc);text-align:center;font-weight:750}
+.simple-week .period{background:var(--plannerHead,#fafbfe);font-weight:700;display:flex;align-items:center}
+.planner-cell{background:var(--planner,var(--card));outline:none;cursor:text;transition:.15s}
+.planner-cell:hover{background:#f7f9ff}
+.planner-cell:focus{box-shadow:inset 0 0 0 2px var(--primary);background:var(--card)}
+.planner-cell.has-content{font-weight:650}
+.theme-preview{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--primary);margin-right:5px}
+</style>
+</head>
 <body>
-  <h1>Zigosse</h1>
-  <p>Welcome to my website!</p>
-  <img src="https://content.codecademy.com/articles/github-pages-via-web-app/happy-ice-cream.gif" />
-</body>
+<div class="app">
+<nav>
+  <div class="logo">◉ Mon suivi</div>
+  <button class="navbtn active" data-view="dashboard">🏠 Tableau de bord</button>
+  <button class="navbtn" data-view="weight">⚖️ Poids & IMC</button>
+  <button class="navbtn" data-view="food">🍎 Alimentation</button>
+  <button class="navbtn" data-view="sport">📅 Planning sportif</button>
+  <button class="navbtn" data-view="settings">⚙️ Paramètres</button>
+</nav>
+<div class="mobileNav">
+  <button class="navbtn active" data-view="dashboard">🏠</button><button class="navbtn" data-view="weight">⚖️</button><button class="navbtn" data-view="food">🍎</button><button class="navbtn" data-view="sport">📅</button><button class="navbtn" data-view="settings">⚙️</button>
+</div>
+<main>
+<section id="dashboard" class="view active">
+<h1>Tableau de bord</h1><p class="sub">Votre suivi en un coup d'œil.</p>
+<div class="grid cards">
+<div class="card"><div class="label">Poids actuel</div><div class="metric" id="dWeight">—</div><div class="small" id="dWeightChange"></div></div>
+<div class="card"><div class="label">IMC</div><div class="metric" id="dBmi">—</div><div class="small" id="dBmiCat"></div></div>
+<div class="card"><div class="label">Calories aujourd'hui</div><div class="metric" id="dCalories">0 kcal</div><div class="small" id="dCalTarget"></div></div>
+<div class="card"><div class="label">Sport cette semaine</div><div class="metric" id="dSport">0</div><div class="small">activité(s) planifiée(s)</div></div>
+</div>
+<div class="grid two" style="margin-top:18px">
+<div class="card"><h2>Évolution du poids</h2><div class="chart"><canvas id="dashChart"></canvas></div></div>
+<div class="card"><h2>Objectif de poids</h2><div id="goalBox"></div></div>
+</div>
+</section>
 
+<section id="weight" class="view">
+<div class="toolbar"><div><h1>Poids & IMC</h1><p class="sub">Enregistrez et corrigez vos mesures.</p></div><button class="btn" onclick="resetWeightForm()">+ Ajouter une mesure</button></div>
+<div class="grid two">
+<div class="card"><h2>Nouvelle mesure</h2>
+<form id="weightForm"><input type="hidden" id="weightId"><div class="row"><label>Date<input type="date" id="weightDate" required></label><label>Poids (kg)<input type="number" id="weightValue" step="0.1" min="1" required></label></div><label>Note (facultatif)<textarea id="weightNote"></textarea></label><div class="actions"><button class="btn">Enregistrer</button><button type="button" class="btn secondary" onclick="resetWeightForm()">Réinitialiser</button></div></form>
+</div>
+<div class="card"><h2>IMC actuel</h2><div class="metric" id="weightBmi">—</div><p id="weightBmiCat" class="sub"></p><div class="small">La taille se règle dans Paramètres.</div></div>
+</div>
+<div class="card" style="margin-top:18px"><h2>Historique</h2><div class="chart"><canvas id="weightChart"></canvas></div><div style="overflow:auto"><table><thead><tr><th>Date</th><th>Poids</th><th>Note</th><th>Actions</th></tr></thead><tbody id="weightTable"></tbody></table></div></div>
+</section>
+
+<section id="food" class="view">
+<div class="toolbar"><div><h1>Alimentation</h1><p class="sub">Enregistrez vos repas et calculez automatiquement les totaux.</p></div><button class="btn" onclick="resetFoodForm()">+ Ajouter un aliment</button></div>
+<div class="grid two">
+<div class="card"><h2>Ajouter un aliment</h2><form id="foodForm"><input type="hidden" id="foodId">
+<div class="row">
+<label>Date<input type="date" id="foodDate" required></label>
+<label>Aliment<input id="foodName" required placeholder="Ex. Poulet, pizza, yaourt..."></label>
+</div>
+<label>Calories consommées<input type="number" id="foodCalories" step="1" min="0" required placeholder="Ex. 450"></label>
+<div class="actions"><button class="btn">Enregistrer</button><button type="button" class="btn secondary" onclick="resetFoodForm()">Réinitialiser</button></div>
+</form></div>
+<div class="card"><h2>Aujourd'hui</h2><div class="metric" id="foodTotal">0 kcal</div><div class="small" id="foodTargetText"></div><div class="progress"><i id="foodProgress" style="width:0%"></i></div></div>
+</div>
+<div class="card" style="margin-top:18px"><h2>Journal alimentaire</h2><div style="overflow:auto"><table><thead><tr><th>Date</th><th>Aliment</th><th>Calories</th><th>Actions</th></tr></thead><tbody id="foodTable"></tbody></table></div></div>
+</section>
+
+<section id="sport" class="view">
+<div class="toolbar"><div><h1>Planning sportif</h1><p class="sub">Cliquez directement dans une demi-journée pour écrire votre activité.</p></div></div>
+<div class="card">
+  <div class="planner-help">💡 Cliquez dans une case, écrivez votre activité, puis cliquez ailleurs pour sauvegarder. Double-cliquez pour effacer.</div>
+  <div class="calendar" id="simplePlanner"></div>
+</div>
+</section>
+
+<section id="settings" class="view">
+<h1>Paramètres</h1><p class="sub">Ces données restent enregistrées dans ce navigateur.</p>
+<div class="card settings-card" style="max-width:760px"><form id="settingsForm">
+<label>Thème de couleurs
+<select id="theme">
+<option value="blue">Bleu classique</option>
+<option value="green">Vert</option>
+<option value="purple">Violet</option>
+<option value="orange">Orange</option>
+<option value="rose">Rose</option>
+<option value="dark">Sombre</option>
+</select></label>
+</div><div class="row"><label>Taille (cm)<input type="number" id="height" min="50" max="250" step="1"></label><label>Objectif de poids (kg)<input type="number" id="targetWeight" min="1" step="0.1"></label></div>
+<div class="row"><label>Poids de départ (kg)<input type="number" id="startWeight" min="1" step="0.1"></label><label>Objectif calorique / jour<input type="number" id="calTarget" min="0" step="50"></label></div>
+<div class="actions"><button class="btn">Enregistrer les paramètres</button><button type="button" class="btn secondary" onclick="exportData()">Exporter les données</button><button type="button" class="btn danger" onclick="clearAll()">Tout effacer</button></div>
+</form></div>
+</section>
+</main></div>
+
+<script>
+const KEY='monSuiviV1';
+let db=JSON.parse(localStorage.getItem(KEY)||'null')||{settings:{height:180,targetWeight:78,startWeight:0,calTarget:2000,theme:'blue'},weights:[],foods:[],sports:[]};
+const $=id=>document.getElementById(id), today=()=>new Date().toISOString().slice(0,10);
+function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function fmt(n){return Number(n).toLocaleString('fr-FR',{maximumFractionDigits:1})}
+function bmi(w){let h=Number(db.settings.height)/100;return w&&h? w/(h*h):0}
+function bmiCat(v){if(!v)return '';if(v<18.5)return'Insuffisance pondérale';if(v<25)return'Corpulence normale';if(v<30)return'Surpoids';return'Obésité'}
+function latestWeight(){return [...db.weights].sort((a,b)=>b.date.localeCompare(a.date))[0]}
+function currentCalories(){let d=today();return db.foods.filter(x=>x.date===d).reduce((s,x)=>s+Number(x.calories),0)}
+function weekStart(d=new Date()){let x=new Date(d);let day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);x.setHours(0,0,0,0);return x}
+function inWeek(date){let s=weekStart();let e=new Date(s);e.setDate(e.getDate()+7);let d=new Date(date+'T00:00:00');return d>=s&&d<e}
+function nav(view){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===view));document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.view===view));renderAll()}
+document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>nav(b.dataset.view));
+
+function resetWeightForm(){ $('weightId').value='';$('weightDate').value=today();$('weightValue').value='';$('weightNote').value=''}
+$('weightForm').onsubmit=e=>{e.preventDefault();let id=$('weightId').value||crypto.randomUUID();let obj={id,date:$('weightDate').value,weight:Number($('weightValue').value),note:$('weightNote').value};let i=db.weights.findIndex(x=>x.id===id);i>=0?db.weights[i]=obj:db.weights.push(obj);save();resetWeightForm()}
+function editWeight(id){let x=db.weights.find(x=>x.id===id);$('weightId').value=x.id;$('weightDate').value=x.date;$('weightValue').value=x.weight;$('weightNote').value=x.note||'';nav('weight')}
+function delWeight(id){if(confirm('Supprimer cette mesure ?')){db.weights=db.weights.filter(x=>x.id!==id);save()}}
+function renderWeights(){
+ let arr=[...db.weights].sort((a,b)=>a.date.localeCompare(b.date)), latest=latestWeight(), b=latest?bmi(latest.weight):0;
+ $('weightBmi').textContent=b?fmt(b):'—';$('weightBmiCat').textContent=bmiCat(b);
+ $('weightTable').innerHTML=arr.slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${fmt(x.weight)} kg</td><td>${esc(x.note||'')}</td><td><div class="actions"><button class="btn secondary" onclick="editWeight('${x.id}')">Modifier</button><button class="btn danger" onclick="delWeight('${x.id}')">Supprimer</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">Aucune mesure.</td></tr>';
+ drawChart('weightChart',arr.map(x=>x.date),arr.map(x=>x.weight),'Poids (kg)');
+ drawChart('dashChart',arr.slice(-30).map(x=>x.date),arr.slice(-30).map(x=>x.weight),'Poids (kg)');
+}
+let charts={};
+function drawChart(id,labels,data,label){if(charts[id])charts[id].destroy();let c=$(id);if(!c)return;charts[id]=new Chart(c,{type:'line',data:{labels,datasets:[{label,data,borderWidth:2,tension:.25,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false}}}})}
+
+function resetFoodForm(){$('foodId').value='';$('foodDate').value=today();$('foodName').value='';$('foodCalories').value=''}
+$('foodForm').onsubmit=e=>{e.preventDefault();let id=$('foodId').value||crypto.randomUUID(),obj={id,date:$('foodDate').value,name:$('foodName').value,calories:Number($('foodCalories').value)||0};let i=db.foods.findIndex(x=>x.id===id);i>=0?db.foods[i]=obj:db.foods.push(obj);save();resetFoodForm()}
+function editFood(id){let x=db.foods.find(x=>x.id===id);$('foodId').value=x.id;$('foodDate').value=x.date;$('foodName').value=x.name;$('foodCalories').value=x.calories;nav('food')}
+function delFood(id){if(confirm('Supprimer cet aliment ?')){db.foods=db.foods.filter(x=>x.id!==id);save()}}
+
+function renderFoods(){let arr=[...db.foods].sort((a,b)=>b.date.localeCompare(a.date));$('foodTable').innerHTML=arr.map(x=>`<tr><td>${x.date}</td><td>${esc(x.name)}</td><td>${fmt(x.calories)} kcal</td><td><div class="actions"><button class="btn secondary" onclick="editFood('${x.id}')">Modifier</button><button class="btn danger" onclick="delFood('${x.id}')">Supprimer</button></div></td></tr>`).join('')||'<tr><td colspan="4" class="empty">Aucune entrée.</td></tr>';let t=currentCalories(),goal=Number(db.settings.calTarget)||0;$('foodTotal').textContent=fmt(t)+' kcal';$('foodTargetText').textContent=goal?`Objectif : ${fmt(goal)} kcal`:'Aucun objectif';$('foodProgress').style.width=goal?Math.min(100,t/goal*100)+'%':'0%';}
+
+function plannerKey(date,period){return date+'_'+period}
+function weekDates(){let s=weekStart(),out=[];for(let i=0;i<7;i++){let d=new Date(s);d.setDate(d.getDate()+i);out.push(d.toISOString().slice(0,10))}return out}
+function savePlannerCell(el){
+  let key=el.dataset.key;
+  db.sports=db.sports.filter(x=>x.key!==key);
+  let text=el.textContent.trim();
+  if(text) db.sports.push({key,text});
+  localStorage.setItem(KEY,JSON.stringify(db));
+  el.classList.toggle('has-content',!!text);
+}
+function renderSport(){
+  let dates=weekDates(), names=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  let html='<div class="simple-week"><div class="head"></div>';
+  dates.forEach((d,i)=>{let z=new Date(d+'T00:00:00');html+=`<div class="head">${names[i]}<br><span class="small">${z.getDate()}/${z.getMonth()+1}</span></div>`});
+  ['Matin','Après-midi'].forEach(period=>{
+    html+=`<div class="period">${period}</div>`;
+    dates.forEach(d=>{
+      let key=plannerKey(d,period),x=db.sports.find(v=>v.key===key);
+      html+=`<div class="planner-cell ${x&&x.text?'has-content':''}" contenteditable="true" spellcheck="false" data-key="${key}">${x?esc(x.text):''}</div>`;
+    });
+  });
+  $('simplePlanner').innerHTML=html+'</div>';
+  document.querySelectorAll('.planner-cell').forEach(el=>{
+    el.addEventListener('blur',()=>savePlannerCell(el));
+    el.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){e.preventDefault();el.blur()}
+    });
+    el.addEventListener('dblclick',()=>{
+      el.textContent='';
+      savePlannerCell(el);
+      el.focus();
+    });
+  });
+}
+function applyTheme(){
+  let t=db.settings.theme||'blue';
+  let themes={
+    blue:{primary:'#4967ff',bg:'#f5f7fb',card:'#fff',text:'#172033',muted:'#687386',line:'#e5e9f0'},
+    green:{primary:'#198754',bg:'#f3f8f5',card:'#fff',text:'#17241c',muted:'#64756a',line:'#dfe9e2'},
+    purple:{primary:'#7950f2',bg:'#f7f5fb',card:'#fff',text:'#201a2e',muted:'#756c84',line:'#e6e0ef'},
+    orange:{primary:'#e8590c',bg:'#fff7f2',card:'#fff',text:'#2a1c16',muted:'#806d63',line:'#eee1da'},
+    rose:{primary:'#d6336c',bg:'#fff5f8',card:'#fff',text:'#2b1820',muted:'#806873',line:'#efdee4'},
+    dark:{primary:'#7c93ff',bg:'#111827',card:'#1b2435',text:'#eef2ff',muted:'#aab4c7',line:'#303b50'}
+  };
+  let x=themes[t]||themes.blue,root=document.documentElement;if(t!=='dark'){x.planner='#fff';x.plannerHead='#f8f9fc'};
+  Object.entries(x).forEach(([k,v])=>root.style.setProperty('--'+k,v));
+  if(t==='dark'){root.style.setProperty('--shadow','0 8px 30px #00000040')}else root.style.setProperty('--shadow','0 8px 30px #18203312');
+}
+function renderSettings(){$('height').value=db.settings.height||'';$('targetWeight').value=db.settings.targetWeight||'';$('startWeight').value=db.settings.startWeight||'';$('calTarget').value=db.settings.calTarget||'';$('theme').value=db.settings.theme||'blue'}
+$('settingsForm').onsubmit=e=>{e.preventDefault();db.settings={height:Number($('height').value)||180,targetWeight:Number($('targetWeight').value)||0,startWeight:Number($('startWeight').value)||0,calTarget:Number($('calTarget').value)||0,theme:$('theme').value||'blue'};localStorage.setItem(KEY,JSON.stringify(db));applyTheme();applyTheme();renderAll();alert('Paramètres enregistrés.')}
+function renderDashboard(){let w=latestWeight(),prev=[...db.weights].sort((a,b)=>b.date.localeCompare(a.date))[1],b=w?bmi(w.weight):0;$('dWeight').textContent=w?fmt(w.weight)+' kg':'—';$('dWeightChange').textContent=w&&prev?`${w.weight-prev.weight>0?'+':''}${fmt(w.weight-prev.weight)} kg vs mesure précédente`:'Aucune mesure précédente';$('dWeightChange').className='small '+(w&&prev&&w.weight<prev.weight?'positive':w&&prev&&w.weight>prev.weight?'negative':'');$('dBmi').textContent=b?fmt(b):'—';$('dBmiCat').textContent=bmiCat(b);let cal=currentCalories(),goal=Number(db.settings.calTarget)||0;$('dCalories').textContent=fmt(cal)+' kcal';$('dCalTarget').textContent=goal?'Objectif : '+fmt(goal)+' kcal':'Aucun objectif';$('dSport').textContent=db.sports.filter(x=>x.key).length;let target=Number(db.settings.targetWeight)||0,start=Number(db.settings.startWeight)||0;if(w&&target){let total=Math.abs(start-target)||1,done=Math.abs(start-w.weight),p=Math.max(0,Math.min(100,done/total*100));$('goalBox').innerHTML=`<div class="metric">${fmt(target)} kg</div><p class="sub">Poids actuel : ${fmt(w.weight)} kg</p><div class="progress"><i style="width:${p}%"></i></div><p class="small">${fmt(Math.abs(w.weight-target))} kg d'écart avec l'objectif</p>`}else $('goalBox').innerHTML='<p class="empty">Définissez un objectif et enregistrez votre poids.</p>'}
+function renderAll(){renderDashboard();renderWeights();renderFoods();renderSport();renderSettings()}
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mon-suivi-donnees.json';a.click();URL.revokeObjectURL(a.href)}
+function clearAll(){if(confirm('Cette action supprimera toutes les données locales. Continuer ?')){localStorage.removeItem(KEY);location.reload()}}
+$('weightDate').value=today();$('foodDate').value=today();$('sportDate').value=today();renderAll();
+</script>
+</body>
 </html>
